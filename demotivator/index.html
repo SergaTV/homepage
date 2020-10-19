@@ -1,0 +1,195 @@
+<style>
+.inputs {
+    display: flex;
+    flex-direction: column;
+}
+
+.wide_input {
+    width: 50%;
+}
+
+.input_row {
+    margin-bottom: 6px;
+}
+
+#dropzone {
+    height: 60px;
+    display: flex;
+    align-items: center;
+    border-radius: 6px;
+    border: 1px solid;
+    border-color: #0F0;
+    padding: 0 4px;
+}
+
+#file_input {
+    margin-left: 4px;
+}
+</style>
+
+<div class="inputs">
+    <div class="input_row">
+        <span>Верхний текст:</span>
+        <input type="text" id="top_text" class="wide_input" />
+    </div>
+    <div class="input_row">
+        <span>Нижний текст:</span>
+        <input type="text" id="bottom_text" class="wide_input" />
+    </div>
+    <div class="input_row">
+        <span>Размер картинки (%):</span>
+        <input type="text" id="scale" value="100" />
+    </div>
+    <div class="input_row" id="dropzone">
+        <span>Фотку выбери или перетащи её сюда:</span>
+        <input type="file" id="file_input" accept="image/*" />
+    </div>
+    <div class="input_row">
+        <input type="button" value="Draw" id="btn" />
+    </div>
+</div>
+<canvas id="canvas"></canvas>
+
+<script>
+//standard
+const imageBorderWidth = 2; // needs to be divisible by 2
+const outerPadding = 15;
+const imageInnerPadding = 4;
+const fontFace = {
+    top: "Times New Roman",
+    bottom: "Times New Roman",
+};
+const fontSize = {
+    top: 40,
+    bottom: 24,
+};
+const fontStyle = {
+     top: `${fontSize.top}px ${fontFace.top}`,
+     botttom: `${fontSize.bottom}px ${fontFace.bottom}`,
+};
+const baselineOffset = {
+    top: 45,
+    bottom: 36,
+};
+const backgroundFillStyle = "#000";
+const borderStrokeStyle = "#FFF";
+const textFillStyle = "#FFF";
+
+const ge = document.getElementById.bind(document);
+
+const topTextInput = ge("top_text");
+const bottomTextInput = ge("bottom_text");
+const scaleInput = ge("scale");
+const dropzone = ge("dropzone");
+const input = ge("file_input");
+const btn = ge("btn");
+const canvas = ge("canvas");
+
+const ctx = canvas.getContext("2d");
+
+function getTextWidth(text, styleName) {
+    ctx.font = fontStyle[styleName];
+    return ctx.measureText(text).width;
+}
+
+function render(img) {
+    const topText = topTextInput.value.trim();
+    const bottomText = bottomTextInput.value.trim();
+
+    const scaleValue = scaleInput.value.trim();
+    const parsedScale = parseFloat(scaleValue.length > 0 ? scaleValue : 100);
+    const scale = Math.max(0, Math.min(1, isNaN(parsedScale) ? 1 : parsedScale / 100));
+
+    const topTextWidth = getTextWidth(topText, "top");
+    const bottomTextWidth = getTextWidth(bottomText, "bottom");
+    const imageSize = {
+        width: Math.round(img.naturalWidth * scale / 2) * 2, // needs to be divisible by 2
+        height: Math.round(img.naturalHeight * scale),
+    };
+
+    const rectInnerWidth = imageSize.width + imageInnerPadding * 2;
+    const rectInnerHeight = imageSize.height + imageInnerPadding * 2;
+    const totalBorderWidth = imageBorderWidth * 2;
+    const topTextY = totalBorderWidth + rectInnerHeight + (topText.length > 0 ? baselineOffset.top : 0);
+    const bottomTextY = topTextY + (bottomText.length > 0 ? baselineOffset.bottom : 0);
+
+    const contentWidth = Math.max(topTextWidth, bottomTextWidth, rectInnerWidth + totalBorderWidth);
+    const contentHeight = bottomTextY;
+
+    const canvasWidth = Math.round(contentWidth / 2 + outerPadding) * 2; // needs to be divisible by 2
+    const canvasHeight = contentHeight + outerPadding * 2;
+
+    canvas.width = canvasWidth;
+    canvas.height = canvasHeight;
+
+    ctx.fillStyle = backgroundFillStyle;
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+    ctx.lineWidth = imageBorderWidth;
+    ctx.strokeStyle = borderStrokeStyle;
+
+    const rectTotalWidth = rectInnerWidth + imageBorderWidth;
+
+    ctx.strokeRect(canvasWidth / 2 - rectTotalWidth / 2, outerPadding + imageBorderWidth / 2,
+                   rectTotalWidth, rectInnerHeight + imageBorderWidth);
+
+    ctx.drawImage(img, canvasWidth / 2 - imageSize.width / 2, outerPadding + imageBorderWidth + imageInnerPadding, imageSize.width, imageSize.height);
+
+    ctx.fillStyle = textFillStyle;
+    ctx.textAlign = "center"; // allows to use x of the center and not of the bottom left corner
+
+    if (topText.length > 0) {
+        ctx.font = fontStyle.top;
+        ctx.fillText(topText, canvasWidth / 2, outerPadding + topTextY);
+    }
+
+    if (bottomText.length > 0) {
+        ctx.font = fontStyle.botttom;
+        ctx.fillText(bottomText, canvasWidth / 2, outerPadding + bottomTextY);
+    }
+}
+
+dropzone.ondragover = function(evt) {
+    evt.preventDefault();
+};
+
+dropzone.ondragenter = function(evt) {
+    dropzone.style.borderColor = "#00F";
+    evt.preventDefault();
+};
+
+dropzone.ondragleave = function(evt) {
+    dropzone.style.borderColor = "#0F0";
+}
+
+dropzone.ondrop = function(evt) {
+    dropzone.style.borderColor = "#0F0";
+    for (let i = 0; i < evt.dataTransfer.files.length; ++i) {
+        const file = evt.dataTransfer.files[i];
+        if (file.type.startsWith("image/")) {
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            input.files = dt.files;
+            break;
+        }
+    }
+    evt.preventDefault();
+};
+
+btn.onclick = function () {
+    if (input.files.length > 0) {
+        const file = input.files[0];
+        const fileReader = new FileReader();
+        
+        fileReader.onloadend = function () {
+            const img = document.createElement("img");
+            img.onload = render.bind(this, img);
+            img.src = fileReader.result;
+        };
+
+        fileReader.readAsDataURL(file);
+    } else {
+        alert("Пожалуйста выбери файл");
+    }
+};
+</script>
