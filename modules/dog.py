@@ -2,7 +2,6 @@ from .. import loader, utils  # pylint: disable=relative-beyond-top-level
 import logging
 import requests
 import io
-import cat
 import os
 import time
 
