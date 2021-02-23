@@ -1,0 +1,20 @@
+.bg {
+    background: url('../images/wallpaperflare.com_wallpaper.jpg');
+    height: 100%; 
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    backdrop-filter:blur(15px);
+    -webkit-backdrop-filter:blur(15px)
+}
+
+@font-face {
+    font-family: "ubuntu";
+    src: url("../fonts/somatic.ttf") format("truetype");
+}
+
+body, html{
+    height: 100%;
+    margin: 0;
+    font-family: "ubuntu";
+}  
