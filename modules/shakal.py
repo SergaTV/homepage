@@ -14,14 +14,6 @@ class VSHAKALMod(loader.Module):
 	  if not reply: return await m.edit("дай видео на реплай...")
 	  if reply.file.mime_type.split("/")[0]=="video":
 	    args = utils.get_args_raw(m)
-	    if args:
-	      if args in lvls:
-	        lvl = lvls[args]
-	      else:
-	        await message.edit("не знаю такого")
-	        return
-	    else:
-	      lvl = lvls["3"]
 	    vid = await reply.download_media("".join([random.choice(string.ascii_letters) for i in range(25)])+".mp4")
 	    out = "".join([random.choice(string.ascii_letters) for i in range(25)])+".3gp"
 	    await m.edit("[Шакал] Шакалю...")
