@@ -17,7 +17,7 @@ class VSHAKALMod(loader.Module):
 	    vid = await reply.download_media("".join([random.choice(string.ascii_letters) for i in range(25)])+".mp4")
 	    out = "".join([random.choice(string.ascii_letters) for i in range(25)])+".3gp"
 	    await m.edit("[Шакал] Шакалю...")
-	    os.system(f"ffmpeg -y -i \"{vid}\" -b 300k -s 176x144 -vcodec mpeg4 -ac 2 -ab 16k -acodec aac \"{out}\"")
+	    os.system(f"ffmpeg -y -i \"{vid}\" -b 300k -s 128x96 -vcodec mpeg4 -ac 2 -ab 8k -acodec aac \"{out}\"")
 	    await reply.reply(file=out)
 	    await m.delete()
 	    os.remove(vid)
